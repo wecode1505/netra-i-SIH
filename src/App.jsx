@@ -4,7 +4,11 @@ import MainLayout from './components/layout/MainLayout';
 import Dashboard from './pages/Dashboard';
 import Cases from './pages/Cases';
 import InvestigationGraph from './pages/InvestigationGraph';
-import Evidence from './pages/Evidence'; // Make sure this is imported!
+import Evidence from './pages/Evidence';
+import Network from './pages/Network';
+import Messages from './pages/Messages';
+import Simulator from './pages/Simulator';
+import Settings from './pages/Settings'; // Imported Settings
 
 function App() {
   return (
@@ -12,14 +16,15 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         
-        {/* All routes inside here have the Sidebar and floating Chat */}
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/cases" element={<Cases />} />
           <Route path="/graph" element={<InvestigationGraph />} />
-          
-          {/* This is the missing line that caused the blank screen! */}
-          <Route path="/evidence" element={<Evidence />} /> 
+          <Route path="/evidence" element={<Evidence />} />
+          <Route path="/network" element={<Network />} />
+          <Route path="/messages" element={<Messages />} />
+          <Route path="/simulator" element={<Simulator />} />
+          <Route path="/settings" element={<Settings />} /> {/* New Route */}
         </Route>
       </Routes>
     </Router>
