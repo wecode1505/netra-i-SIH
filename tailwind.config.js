@@ -8,18 +8,23 @@ export default {
     extend: {
       colors: {
         dark: {
-          900: '#0a0a0a', // Deepest background
-          800: '#121212', // Card background
-          700: '#1e1e1e', // Borders and highlights
+          900: '#050505', // True black/deepest slate
+          800: '#0f1115', // Premium dark card background
+          700: '#1e2128', // Subtle borders
+          600: '#2a2f3a', // Hover states
         },
         accent: {
-          red: '#dc2626', // Alert / Action color
-          blue: '#2563eb', // AI / Link color
+          cyan: '#06b6d4',   // Primary AI Color
+          indigo: '#6366f1', // Secondary AI Color
+          red: '#ef4444',    // Alerts
         }
       },
       fontFamily: {
-        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', "Liberation Mono", "Courier New", 'monospace'],
-        sans: ['Inter', 'system-ui', 'Avenir', 'Helvetica', 'Arial', 'sans-serif'],
+        sans: ['"Inter"', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', '"Fira Code"', 'monospace'],
+      },
+      animation: {
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       }
     },
   },
