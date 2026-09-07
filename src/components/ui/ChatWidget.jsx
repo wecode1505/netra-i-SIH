@@ -10,10 +10,11 @@ const ChatWidget = () => {
     { sender: 'ai', text: 'System online. I can analyze case files, find connections in the investigation graph, or summarize evidence. How can I assist you, Detective?' }
   ]);
 
-  // The function to talk to your Python backend
+  // The function to talk to your live Python backend
   const sendMessageToAI = async (userMessage) => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/chat', {
+      // UPDATED: Now pointing to your live Render backend!
+      const response = await fetch('https://netra-i-sih.onrender.com/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMessage })
@@ -26,7 +27,7 @@ const ChatWidget = () => {
       
     } catch (error) {
       console.error("Chat engine offline:", error);
-      setMessages(prev => [...prev, { sender: 'ai', text: "Error: Could not connect to AI Engine. Is the Python server running?" }]);
+      setMessages(prev => [...prev, { sender: 'ai', text: "Error: Could not connect to the live AI Engine. Please check your connection." }]);
     }
   };
 
@@ -38,7 +39,7 @@ const ChatWidget = () => {
     // Add the user's message to the screen immediately
     setMessages(prev => [...prev, { sender: 'user', text: inputText }]);
     
-    // Send it to the Python AI backend
+    // Send it to the live Python AI backend
     sendMessageToAI(inputText);
     
     // Clear the input box

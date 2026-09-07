@@ -10,8 +10,6 @@ const Dashboard = () => {
   ]);
   
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  
-  // NEW: State to hold the custom text the user types in
   const [reportText, setReportText] = useState("");
 
   const metrics = [
@@ -22,15 +20,15 @@ const Dashboard = () => {
   ];
 
   const runAISweep = async () => {
-    if (!reportText.trim()) return; // Don't run if the box is empty
+    if (!reportText.trim()) return; 
     
     setIsAnalyzing(true);
     
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/analyze', {
+      // UPDATED: Now pointing to your live Render backend!
+      const response = await fetch('https://netra-i-sih.onrender.com/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // NEW: Send the actual typed text instead of the hardcoded string
         body: JSON.stringify({ text: reportText })
       });
       
@@ -46,7 +44,7 @@ const Dashboard = () => {
       };
 
       setInsights(prev => [newInsight, ...prev]);
-      setReportText(""); // Clear the box after running
+      setReportText(""); 
 
     } catch (error) {
       console.error("Failed to connect to AI Engine:", error);
@@ -137,7 +135,7 @@ const Dashboard = () => {
             ))}
           </div>
 
-          {/* NEW: Custom Input Box for Live Demo */}
+          {/* Custom Input Box for Live Demo */}
           <div className="mt-auto pt-4 border-t border-dark-700">
             <textarea 
               value={reportText}
