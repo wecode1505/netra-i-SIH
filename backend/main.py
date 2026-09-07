@@ -16,7 +16,7 @@ except OSError:
 # It will look for your API key in the environment variables
 # TEMPORARY FOR LOCAL TESTING ONLY
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "YOUR_API_KEY_HERE")
-llm_model = genai.GenerativeModel('gemini-2.5-flash')
+llm_model = genai.GenerativeModel('gemini-3.6-flash')
 
 app = FastAPI(title="Netra-i AI Engine", version="2.0")
 
