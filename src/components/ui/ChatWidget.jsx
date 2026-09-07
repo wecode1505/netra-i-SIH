@@ -1,19 +1,50 @@
-import React, { useState } from 'react';
-import { Send, X, Bot } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, X, Bot, Shield, Loader2, Mic } from 'lucide-react';
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [inputText, setInputText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const messagesEndRef = useRef(null);
   
-  // This state holds all the chat bubbles
   const [messages, setMessages] = useState([
-    { sender: 'ai', text: 'System online. I can analyze case files, find connections in the investigation graph, or summarize evidence. How can I assist you, Detective?' }
+    { sender: 'ai', text: 'Tactical link established. Voice interrogation module online. Standing by for queries.' }
   ]);
 
-  // The function to talk to your live Python backend
-  const sendMessageToAI = async (userMessage) => {
+  const playTacticalSound = () => {
     try {
-      // UPDATED: Now pointing to your live Render backend!
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1600, audioCtx.currentTime + 0.08);
+      
+      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+      
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.08);
+    } catch (err) {
+      console.warn("Audio Context unavailable:", err);
+    }
+  };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, loading]);
+
+  const sendMessageToAI = async (userMessage) => {
+    setLoading(true);
+    try {
       const response = await fetch('https://netra-i-sih.onrender.com/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -21,76 +52,165 @@ const ChatWidget = () => {
       });
       
       const data = await response.json();
-      
-      // Add the AI's response to the chat screen
+      playTacticalSound();
       setMessages(prev => [...prev, { sender: 'ai', text: data.response }]);
-      
     } catch (error) {
       console.error("Chat engine offline:", error);
-      setMessages(prev => [...prev, { sender: 'ai', text: "Error: Could not connect to the live AI Engine. Please check your connection." }]);
+      setMessages(prev => [...prev, { sender: 'ai', text: "Critical Alert: Secure link to Netra-i AI Engine failed. Verify server status." }]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // The function triggered when you click the "Send" button
   const handleSend = (e) => {
-    e.preventDefault();
-    if (!inputText.trim()) return;
+    if (e) e.preventDefault();
+    if (!inputText.trim() || loading) return;
 
-    // Add the user's message to the screen immediately
-    setMessages(prev => [...prev, { sender: 'user', text: inputText }]);
+    const rawQuery = inputText;
+    const cleanQuery = rawQuery.trim().toLowerCase();
     
-    // Send it to the live Python AI backend
-    sendMessageToAI(inputText);
-    
-    // Clear the input box
+    // Add user message to screen immediately
+    setMessages(prev => [...prev, { sender: 'user', text: rawQuery }]);
     setInputText("");
+
+    // --- HYBRID COMBO ENGINE (Offline Zero-Latency Check) ---
+    // This solves the latency issue by answering standard questions instantly!
+    const offlineCache = {
+      "hi": "Greetings, Officer. Netra-i is online and monitoring all sectors.",
+      "hello": "Greetings, Officer. Netra-i is online and monitoring all sectors.",
+      "how are you": "All systems are operating at 100% capacity. Ready for your command.",
+      "how are you?": "All systems are operating at 100% capacity. Ready for your command.",
+      "status": "System status: GREEN. 3 Active cases loaded. No breaches detected.",
+      "help": "You can ask me to summarize cases, track suspects, or analyze evidence.",
+      "cases": "Currently tracking Case #2047, #3312, and #3390. Which one do you need to review?",
+    };
+
+    if (offlineCache[cleanQuery]) {
+      playTacticalSound();
+      setMessages(prev => [...prev, { sender: 'ai', text: offlineCache[cleanQuery] }]);
+      return; // Stop here! Do not send to the slow cloud server.
+    }
+
+    // --- ONLINE LLM ENGINE (For Complex Detective Work) ---
+    // If it is not a basic greeting, send it to Gemini for deep analysis.
+    sendMessageToAI(rawQuery);
+  };
+
+  // --- UPGRADED MIC FUNCTION (Cross-Browser Compatible) ---
+  const startListening = () => {
+    // Check for both standard and webkit prefixes
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+      alert("Voice AI not supported in this browser. Please use Chrome or Edge for microphone access.");
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInputText(transcript); // Drop the spoken words directly into the text box
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Microphone processing error:", event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch (err) {
+      console.error("Microphone initialization failed:", err);
+      setIsListening(false);
+    }
   };
 
   if (!isOpen) return (
-    <button onClick={() => setIsOpen(true)} className="fixed bottom-6 right-6 p-4 bg-accent-cyan rounded-full text-dark-900 shadow-[0_0_20px_rgba(6,182,212,0.5)] z-50">
+    <button 
+      onClick={() => setIsOpen(true)} 
+      className="fixed bottom-6 right-6 p-4 bg-cyan-500 rounded-full text-slate-950 shadow-[0_0_25px_rgba(6,182,212,0.6)] hover:scale-105 transition-all z-50 flex items-center justify-center"
+    >
       <Bot size={24} />
     </button>
   );
 
   return (
-    <div className="fixed bottom-6 right-6 w-80 bg-dark-900 border border-dark-700 rounded-xl shadow-2xl flex flex-col z-50">
-      {/* Chat Header */}
-      <div className="flex justify-between items-center p-4 border-b border-dark-700 bg-dark-800/50 rounded-t-xl">
-        <div className="flex items-center gap-2 text-white font-mono text-sm font-bold tracking-widest">
-          <Bot size={16} className="text-accent-cyan" />
-          AI ASSISTANT
+    <div className="fixed bottom-6 right-6 w-96 bg-[#0c121e]/95 backdrop-blur-xl border border-cyan-500/30 rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.8)] flex flex-col z-50 overflow-hidden font-mono">
+      {/* Header */}
+      <div className="flex justify-between items-center p-4 border-b border-slate-800 bg-slate-900/60">
+        <div className="flex items-center gap-2 text-cyan-400 font-bold tracking-wider text-xs">
+          <Shield size={16} className="text-cyan-400 animate-pulse" />
+          NETRA-i TACTICAL INTEL
         </div>
-        <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white transition-colors">
+        <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-white transition-colors">
           <X size={16} />
         </button>
       </div>
 
-      {/* Chat Messages Area */}
-      <div className="flex-1 p-4 h-80 overflow-y-auto space-y-4 custom-scrollbar">
+      {/* Message Stream */}
+      <div className="flex-1 p-4 h-80 overflow-y-auto space-y-4 custom-scrollbar bg-slate-950/40">
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
-            <div className={`p-3 rounded-lg max-w-[85%] text-sm leading-relaxed ${
+            <span className="text-[10px] text-slate-500 mb-1">
+              {msg.sender === 'user' ? 'OFFICER' : 'SYSTEM CORE'}
+            </span>
+            <div className={`p-3 rounded-xl max-w-[85%] text-xs leading-relaxed ${
               msg.sender === 'user' 
-                ? 'bg-transparent text-white text-right' 
-                : 'bg-dark-800 text-gray-300 border border-dark-700'
+                ? 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-200' 
+                : 'bg-slate-900/90 text-slate-200 border border-slate-800 shadow-md'
             }`}>
               {msg.text}
             </div>
           </div>
         ))}
+
+        {loading && (
+          <div className="flex items-center gap-2 text-cyan-400 text-xs py-2">
+            <Loader2 size={14} className="animate-spin" />
+            <span>Querying Classified Index...</span>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Box Area */}
-      <div className="p-4 bg-dark-800/50 rounded-b-xl border-t border-dark-700">
-        <form onSubmit={handleSend} className="flex items-center bg-dark-950 border border-dark-700 rounded-lg pr-2 focus-within:border-accent-cyan transition-colors">
+      {/* Input Field with Mic */}
+      <div className="p-3 bg-slate-900/80 border-t border-slate-800">
+        <form onSubmit={handleSend} className="flex items-center bg-slate-950 border border-slate-700/60 rounded-xl pl-2 pr-1 focus-within:border-cyan-500 transition-colors">
+          
+          <button 
+            type="button" 
+            onClick={startListening}
+            className={`p-2 rounded-lg transition-colors ${isListening ? 'text-rose-500 animate-pulse bg-rose-500/10' : 'text-slate-400 hover:text-cyan-400'}`}
+            title="Voice Interrogation"
+          >
+            <Mic size={16} />
+          </button>
+
           <input
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder="Ask about this case..."
-            className="flex-1 bg-transparent border-none text-sm text-white p-3 focus:outline-none"
+            placeholder={isListening ? "Listening..." : "Enter command or speak..."}
+            className="flex-1 bg-transparent border-none text-xs text-slate-200 p-2 focus:outline-none placeholder-slate-500"
           />
-          <button type="submit" className="text-gray-500 hover:text-accent-cyan transition-colors p-1">
+          
+          <button 
+            type="submit" 
+            disabled={loading || (!inputText.trim() && !isListening)}
+            className="text-slate-400 hover:text-cyan-400 transition-colors p-2 disabled:opacity-30"
+          >
             <Send size={16} />
           </button>
         </form>

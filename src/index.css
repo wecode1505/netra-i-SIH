@@ -1,26 +1,37 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import "leaflet/dist/leaflet.css";
 
 @layer base {
   body {
-    @apply bg-dark-900 text-gray-200 font-sans antialiased m-0 p-0 overflow-x-hidden;
+    font-family: 'Share Tech Mono', monospace;
+    background-color: #080c14;
+    color: #e2e8f0;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Orbitron', sans-serif;
   }
 }
 
-/* Custom scrollbar for a professional software look */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Custom Tactical Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
 }
-::-webkit-scrollbar-track {
-  background: #0a0a0a; 
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #0f172a;
 }
-::-webkit-scrollbar-thumb {
-  background: #1e1e1e; 
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #06b6d4;
   border-radius: 4px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #333; 
+
+/* Radar & Cyber Animations */
+@keyframes radarSweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.radar-sweep {
+  animation: radarSweep 4s linear infinite;
 }
