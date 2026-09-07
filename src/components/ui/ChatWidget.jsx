@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, X, Bot, Shield, Loader2, Mic } from 'lucide-react';
+import { Send, X, Bot, Shield, Loader2, Mic, AlertCircle } from 'lucide-react';
 
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [micError, setMicError] = useState(""); // NEW: Shows mic error on screen
   const messagesEndRef = useRef(null);
   
   const [messages, setMessages] = useState([
@@ -56,7 +57,7 @@ const ChatWidget = () => {
       setMessages(prev => [...prev, { sender: 'ai', text: data.response }]);
     } catch (error) {
       console.error("Chat engine offline:", error);
-      setMessages(prev => [...prev, { sender: 'ai', text: "Critical Alert: Secure link to Netra-i AI Engine failed. Verify server status." }]);
+      setMessages(prev => [...prev, { sender: 'ai', text: "Critical Alert: Secure link to Netra-i AI Engine failed." }]);
     } finally {
       setLoading(false);
     }
@@ -69,40 +70,37 @@ const ChatWidget = () => {
     const rawQuery = inputText;
     const cleanQuery = rawQuery.trim().toLowerCase();
     
-    // Add user message to screen immediately
     setMessages(prev => [...prev, { sender: 'user', text: rawQuery }]);
     setInputText("");
+    setMicError(""); // Clear any mic error on send
 
-    // --- HYBRID COMBO ENGINE (Offline Zero-Latency Check) ---
-    // This solves the latency issue by answering standard questions instantly!
+    // Hybrid Combo Engine (Offline Zero-Latency Check)
     const offlineCache = {
       "hi": "Greetings, Officer. Netra-i is online and monitoring all sectors.",
       "hello": "Greetings, Officer. Netra-i is online and monitoring all sectors.",
-      "how are you": "All systems are operating at 100% capacity. Ready for your command.",
-      "how are you?": "All systems are operating at 100% capacity. Ready for your command.",
+      "how are you": "All systems operating at 100% capacity. Ready for your command.",
+      "how are you?": "All systems operating at 100% capacity. Ready for your command.",
       "status": "System status: GREEN. 3 Active cases loaded. No breaches detected.",
       "help": "You can ask me to summarize cases, track suspects, or analyze evidence.",
-      "cases": "Currently tracking Case #2047, #3312, and #3390. Which one do you need to review?",
+      "cases": "Currently tracking Case #2047, #3312, and #3390.",
     };
 
     if (offlineCache[cleanQuery]) {
       playTacticalSound();
       setMessages(prev => [...prev, { sender: 'ai', text: offlineCache[cleanQuery] }]);
-      return; // Stop here! Do not send to the slow cloud server.
+      return;
     }
 
-    // --- ONLINE LLM ENGINE (For Complex Detective Work) ---
-    // If it is not a basic greeting, send it to Gemini for deep analysis.
     sendMessageToAI(rawQuery);
   };
 
-  // --- UPGRADED MIC FUNCTION (Cross-Browser Compatible) ---
+  // Robust Voice Recognition with UI Error Catching
   const startListening = () => {
-    // Check for both standard and webkit prefixes
+    setMicError("");
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     
     if (!SpeechRecognition) {
-      alert("Voice AI not supported in this browser. Please use Chrome or Edge for microphone access.");
+      setMicError("Browser lacks speech support. Use Google Chrome.");
       return;
     }
 
@@ -118,12 +116,18 @@ const ChatWidget = () => {
 
       recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
-        setInputText(transcript); // Drop the spoken words directly into the text box
+        setInputText(transcript);
+        setIsListening(false);
       };
 
       recognition.onerror = (event) => {
-        console.error("Microphone processing error:", event.error);
+        console.error("Speech error:", event.error);
         setIsListening(false);
+        if (event.error === 'not-allowed') {
+          setMicError("Mic blocked! Check browser address bar permissions.");
+        } else {
+          setMicError(`Mic Error: ${event.error}`);
+        }
       };
 
       recognition.onend = () => {
@@ -132,8 +136,9 @@ const ChatWidget = () => {
 
       recognition.start();
     } catch (err) {
-      console.error("Microphone initialization failed:", err);
+      console.error("Init failed:", err);
       setIsListening(false);
+      setMicError("Failed to initialize microphone.");
     }
   };
 
@@ -185,6 +190,14 @@ const ChatWidget = () => {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Micro-Error Banner if something goes wrong */}
+      {micError && (
+        <div className="bg-rose-500/10 border-t border-rose-500/30 px-3 py-1.5 flex items-center gap-2 text-[10px] text-rose-400">
+          <AlertCircle size={12} className="flex-shrink-0" />
+          <span>{micError}</span>
+        </div>
+      )}
+
       {/* Input Field with Mic */}
       <div className="p-3 bg-slate-900/80 border-t border-slate-800">
         <form onSubmit={handleSend} className="flex items-center bg-slate-950 border border-slate-700/60 rounded-xl pl-2 pr-1 focus-within:border-cyan-500 transition-colors">
@@ -202,7 +215,7 @@ const ChatWidget = () => {
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder={isListening ? "Listening..." : "Enter command or speak..."}
+            placeholder={isListening ? "Listening... Speak now" : "Enter command or speak..."}
             className="flex-1 bg-transparent border-none text-xs text-slate-200 p-2 focus:outline-none placeholder-slate-500"
           />
           
