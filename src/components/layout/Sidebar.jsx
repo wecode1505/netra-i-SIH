@@ -10,7 +10,7 @@ import {
   GraduationCap, 
   Settings,
   LogOut,
-  ScanFocus
+  ShieldCheck
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -29,7 +29,7 @@ const Sidebar = () => {
     <div className="w-64 bg-dark-900/80 backdrop-blur-xl border-r border-dark-700 h-screen flex flex-col pt-6 z-40 relative">
       <div className="flex items-center gap-3 px-6 mb-8 text-white">
         <div className="p-2 bg-gradient-to-br from-accent-cyan to-accent-indigo rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-          <ScanFocus className="text-white" size={24} />
+          <ShieldCheck className="text-white" size={24} />
         </div>
         <span className="font-extrabold text-xl tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">Netra-i</span>
       </div>
@@ -47,8 +47,13 @@ const Sidebar = () => {
               }`
             }
           >
-            <item.icon size={18} className={({ isActive }) => isActive ? "text-accent-cyan" : ""} />
-            {item.name}
+            {/* The Fix: We use a function block here to safely pass the string to the icon */}
+            {({ isActive }) => (
+              <>
+                <item.icon size={18} className={isActive ? "text-accent-cyan" : "text-gray-400"} />
+                {item.name}
+              </>
+            )}
           </NavLink>
         ))}
       </nav>

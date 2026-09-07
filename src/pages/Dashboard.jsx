@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { BrainCircuit, Activity, ShieldAlert, Fingerprint, ArrowUpRight } from 'lucide-react';
+import MapWidget from '../components/ui/MapWidget'; // Import the Map!
 
 const Dashboard = () => {
   const metrics = [
@@ -16,7 +17,6 @@ const Dashboard = () => {
     { time: '08:30 AM', text: 'Cross-referenced 3 historical cases matching current MO.' },
   ];
 
-  // Animation variants for staggered loading
   const container = {
     hidden: { opacity: 0 },
     show: { opacity: 1, transition: { staggerChildren: 0.1 } }
@@ -58,7 +58,6 @@ const Dashboard = () => {
             variants={item}
             className="group relative bg-dark-800/50 backdrop-blur-md border border-dark-700 p-6 rounded-2xl hover:-translate-y-1 hover:border-dark-600 transition-all duration-300 overflow-hidden"
           >
-            {/* Background Glow Effect on Hover */}
             <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-transparent to-${metric.color.split('-')[1]}-500/5`}></div>
             
             <div className="relative z-10 flex flex-col justify-between h-32">
@@ -77,35 +76,23 @@ const Dashboard = () => {
         ))}
       </motion.div>
       
-      {/* Split Bottom Section: Active Cases & AI Insights */}
+      {/* Split Bottom Section: Active Cases Map & AI Insights */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
         className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-10"
       >
-        {/* Active Investigations (Placeholder for Dashboard) */}
-        <div className="lg:col-span-2 bg-dark-800/50 backdrop-blur-md border border-dark-700 rounded-2xl p-6">
-          <h3 className="text-xs font-mono text-gray-400 uppercase tracking-widest mb-6">Priority Investigations</h3>
-          
-          <div className="space-y-4">
-            {/* Mock Quick Case Card */}
-            <div className="group bg-dark-900 border border-dark-700 rounded-xl p-4 flex items-center justify-between hover:border-accent-cyan/50 transition-colors cursor-pointer">
-              <div className="flex items-center gap-4">
-                <div className="w-2 h-10 rounded-full bg-accent-cyan"></div>
-                <div>
-                  <h4 className="text-white font-bold text-lg">Case #2047: Downtown Warehouse</h4>
-                  <p className="text-xs text-gray-400 font-mono mt-1">Status: Active • Evidence pending correlation</p>
-                </div>
-              </div>
-              <button className="text-sm font-mono text-accent-cyan opacity-0 group-hover:opacity-100 transition-opacity">Analyze &rarr;</button>
-            </div>
+        {/* Active Investigations Map */}
+        <div className="lg:col-span-2 bg-dark-800/50 backdrop-blur-md border border-dark-700 rounded-2xl p-6 flex flex-col h-[500px]">
+          <h3 className="text-xs font-mono text-gray-400 uppercase tracking-widest mb-4">Live Geospatial Tracking</h3>
+          <div className="flex-1 rounded-xl overflow-hidden shadow-inner border border-dark-700">
+            <MapWidget />
           </div>
         </div>
 
         {/* AI Automated Insights Panel */}
-        <div className="lg:col-span-1 bg-gradient-to-b from-dark-800 to-dark-900 border border-dark-700 rounded-2xl p-6 relative overflow-hidden">
-          {/* Decorative AI Background */}
+        <div className="lg:col-span-1 bg-gradient-to-b from-dark-800 to-dark-900 border border-dark-700 rounded-2xl p-6 relative overflow-hidden flex flex-col h-[500px]">
           <div className="absolute top-0 right-0 w-32 h-32 bg-accent-indigo/10 blur-3xl rounded-full pointer-events-none"></div>
           
           <div className="flex items-center gap-2 mb-6">
@@ -113,10 +100,9 @@ const Dashboard = () => {
             <h3 className="text-xs font-mono text-white uppercase tracking-widest">Automated AI Insights</h3>
           </div>
 
-          <div className="space-y-5">
+          <div className="space-y-5 flex-1 overflow-y-auto pr-2 custom-scrollbar">
             {aiInsights.map((insight, i) => (
               <div key={i} className="flex gap-4 relative">
-                {/* Timeline line */}
                 {i !== aiInsights.length - 1 && <div className="absolute left-[5px] top-6 bottom-[-20px] w-[1px] bg-dark-700"></div>}
                 
                 <div className="mt-1 w-3 h-3 rounded-full bg-accent-indigo/20 border border-accent-indigo flex-shrink-0"></div>
@@ -128,7 +114,7 @@ const Dashboard = () => {
             ))}
           </div>
 
-          <button className="w-full mt-6 bg-dark-900 hover:bg-dark-700 border border-dark-600 text-white py-2 rounded-lg text-xs font-mono transition-colors">
+          <button className="w-full mt-6 bg-dark-900 hover:bg-dark-700 border border-dark-600 text-white py-2.5 rounded-lg text-xs font-mono transition-colors shadow-lg">
             Run Full Network Sweep
           </button>
         </div>
