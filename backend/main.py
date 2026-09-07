@@ -1,3 +1,5 @@
+import os
+import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -14,7 +16,7 @@ app = FastAPI(title="Netra-i AI Engine", version="1.0")
 # CRITICAL: Allow React frontend to communicate with this backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"], # Your Vite React port
+    allow_origins=["*"], # Allows requests from Vercel frontend and local development
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -143,7 +145,7 @@ def chat_assistant(payload: ChatPayload):
         reply = "[SYSTEM REDIRECT] Initializing Investigation Graph. Mapping criminal associations and financial ties."
 
     elif any(w in msg for w in ["diagnostics", "health", "system check", "ping"]):
-        reply = "Diagnostics Check:\n- FastAPI Core: Online (Port 8000)\n- spaCy NLP Pipeline: Loaded (en_core_web_sm)\n- CORS Security: Active (Port 5173)\n- Database Latency: 12ms"
+        reply = "Diagnostics Check:\n- FastAPI Core: Online\n- spaCy NLP Pipeline: Loaded (en_core_web_sm)\n- Database Latency: 12ms"
 
     # 8. Hackathon Easter Eggs / Fun Commands
     elif any(w in msg for w in ["solve", "solve case", "winner", "hackathon"]):
@@ -157,3 +159,8 @@ def chat_assistant(payload: ChatPayload):
         reply = f"Query parsed: '{payload.message}'. Direct command match not found in local security index. Type 'help' to review available system operations or check case database."
 
     return {"response": reply}
+
+# --- DYNAMIC PORT HANDLER FOR RENDER DEPLOYMENT ---
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
